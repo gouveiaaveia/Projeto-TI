@@ -105,7 +105,7 @@ def huffmaan(data):
     for coluna in data.columns:
         # Construir o codec de Huffman a partir dos dados da coluna
         codec = huffc.HuffmanCodec.from_data(data[coluna])
-        
+        print("Novo")
         # Obter os símbolos e comprimentos dos códigos
         symbols, lengths = codec.get_code_len() #symbols é cada numero do abcedario em cada coluna
                                                 #se um simbolo tem 00 em binario a length é 2 bits
