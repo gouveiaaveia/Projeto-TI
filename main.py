@@ -105,7 +105,6 @@ def huffmaan(data):
     for coluna in data.columns:
         # Construir o codec de Huffman a partir dos dados da coluna
         codec = huffc.HuffmanCodec.from_data(data[coluna])
-        print("Novo")
         # Obter os símbolos e comprimentos dos códigos
         symbols, lengths = codec.get_code_len() #symbols é cada numero do abcedario em cada coluna
                                                 #se um simbolo tem 00 em binario a length é 2 bits
@@ -228,18 +227,19 @@ def main():
     ocorrencias_binned = calcular_ocorrencias(data_uint16[colunas_binned], alfabeto_geral)
 
     # Calcular a média
+    print("\n---------------------\nCálculo médio de bits:\n--------------------")
     calculo_medio_bits(data_uint16)
-    print("\n")
+
     #Huffmaan
+    print("\n---------------------\nCodificação Huffmaan:\n--------------------")
     huffmaan(data_uint16)
 
     #Correlação de Pearson
+    print("\n---------------------\nCálculo da correlação de Pearson:\n--------------------")
     correlacao_pearson(data_uint16, varNames)
 
     #Informação Mútua
-
-    #Ponto 10
-    print("\n")
+    print("\n---------------------\nCálculo da informação mútua:\n--------------------")
     for i in range (len(varNames) - 1):
         valor = calcular_informacao_mutua(data_uint16, i)
         indice = varNames[i]
