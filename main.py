@@ -137,11 +137,52 @@ def huffmaan(data):
     print(f"Média ponderada (total): {L_media:.10f} bits")
     print(f"Variância ponderada dos comprimentos (total): {variancia_ponderada:.10f}\n")
 
+
 def correlacao_pearson(data, varNames):
     for i in range(len(varNames) - 1):
         corr = np.corrcoef(data[varNames[i]], data["MPG"])
         print(f"Correlação de Pearson entre {data.columns[i]} e MPG: {corr[0, 1]}")
 
+
+def calcular_informacao_mutua(data, indice):
+    # Extrair a coluna "MPG" e a coluna da variável indicada pelo índice
+    mpg = data.iloc[:, -1].to_numpy()  # Última coluna para MPG
+    variavel = data.iloc[:, indice].to_numpy()
+    
+    total = len(mpg)  # Número total de pares
+    
+    # Obter valores únicos e contagens para calcular as probabilidades marginais
+    valores_mpg, contagem_mpg = np.unique(mpg, return_counts=True)
+    valores_variavel, contagem_variavel = np.unique(variavel, return_counts=True)
+    
+    prob_mpg = contagem_mpg / total
+    prob_variavel = contagem_variavel / total
+    
+    # Cria uma matriz de pares para calcular a distribuição conjunta
+    pares = np.column_stack((mpg, variavel))
+    valores_pares, contagem_pares = np.unique(pares, axis=0, return_counts=True)
+    
+    # Calcular a informação mútua
+    informacao_mutua = 0
+    for (val_mpg, val_var), contagem_conjunta in zip(valores_pares, contagem_pares):
+        # Probabilidade conjunta do par
+        prob_conjunta = contagem_conjunta / total
+        
+        # Índices para as probabilidades marginais
+        indice_mpg = np.where(valores_mpg == val_mpg)[0][0]
+        indice_variavel = np.where(valores_variavel == val_var)[0][0]
+        
+        prob_marginal_mpg = prob_mpg[indice_mpg]
+        prob_marginal_variavel = prob_variavel[indice_variavel]
+        
+        # Cálculo da informação mútua para o par atual
+        informacao_mutua += prob_conjunta * np.log2(prob_conjunta / (prob_marginal_mpg * prob_marginal_variavel))
+    
+    return informacao_mutua
+
+
+def estimar_MPG(data):
+    pass
 
 def main():
 
@@ -194,7 +235,15 @@ def main():
 
     #Correlação de Pearson
     correlacao_pearson(data_uint16, varNames)
-    
+
+    #Informação Mútua
+
+    #Ponto 10
+    print("\n")
+    for i in range (len(varNames) - 1):
+        valor = calcular_informacao_mutua(data_uint16, i)
+        indice = varNames[i]
+        print(f"Informação mútua entre MPG e {indice} : {valor}" )
 
 if __name__ == "__main__":
     main()
