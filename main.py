@@ -171,17 +171,28 @@ def calcular_informacao_mutua(data, indice):
         indice_mpg = np.where(valores_mpg == val_mpg)[0][0]
         indice_variavel = np.where(valores_variavel == val_var)[0][0]
         
-        prob_marginal_mpg = prob_mpg[indice_mpg]
-        prob_marginal_variavel = prob_variavel[indice_variavel]
+        prob_mpg_final = prob_mpg[indice_mpg]
+        prob_variavel_final = prob_variavel[indice_variavel]
         
         # Cálculo da informação mútua para o par atual
-        informacao_mutua += prob_conjunta * np.log2(prob_conjunta / (prob_marginal_mpg * prob_marginal_variavel))
+        informacao_mutua += prob_conjunta * np.log2(prob_conjunta / (prob_mpg_final * prob_variavel_final))
     
     return informacao_mutua
 
 
-def estimar_MPG(data):
-    pass
+def estimar_mpg(data):
+
+    media_acceleration = np.mean(data["Acceleration"])
+    media_weight = np.mean(data["Weight"])
+
+    #fazer um for e ir fazer por cada coluna
+
+    # Estimar MPG substituindo os valores médios da variável media_acceleration e media_weight
+    pred_mpg_acceleration = -5.5241 - 0.146 * media_acceleration - 0.4909 * cylinders - 0.0026 * displacement - 0.0045 * horsepower + 0.6725 * model_year - 0.0059 * weight
+    pred_mpg_weight = -5.5241 - 0.146 * acceleration - 0.4909 * cylinders - 0.0026 * displacement - 0.0045 * horsepower + 0.6725 * model_year - 0.0059 * media_weight
+
+
+
 
 def main():
 
@@ -190,6 +201,7 @@ def main():
     data = pd.read_excel(exelFile)
 
     varNames = data.columns.values.tolist()
+    print(varNames)
 
     # Plotar gráficos MPG vs outras variáveis
     j = 0
@@ -244,6 +256,10 @@ def main():
         valor = calcular_informacao_mutua(data_uint16, i)
         indice = varNames[i]
         print(f"Informação mútua entre MPG e {indice} : {valor}" )
+
+    #Estimar MPG
+    print("\n---------------------\nEstimar MPG:\n--------------------")
+    estimar_mpg(data_uint16)
 
 if __name__ == "__main__":
     main()
