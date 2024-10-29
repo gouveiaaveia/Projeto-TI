@@ -105,7 +105,6 @@ def huffmaan(data):
     for coluna in data.columns:
         # Construir o codec de Huffman a partir dos dados da coluna
         codec = huffc.HuffmanCodec.from_data(data[coluna])
-        print("Novo")
         # Obter os símbolos e comprimentos dos códigos
         symbols, lengths = codec.get_code_len() #symbols é cada numero do abcedario em cada coluna
                                                 #se um simbolo tem 00 em binario a length é 2 bits
@@ -172,17 +171,62 @@ def calcular_informacao_mutua(data, indice):
         indice_mpg = np.where(valores_mpg == val_mpg)[0][0]
         indice_variavel = np.where(valores_variavel == val_var)[0][0]
         
-        prob_marginal_mpg = prob_mpg[indice_mpg]
-        prob_marginal_variavel = prob_variavel[indice_variavel]
+        prob_mpg_final = prob_mpg[indice_mpg]
+        prob_variavel_final = prob_variavel[indice_variavel]
         
         # Cálculo da informação mútua para o par atual
-        informacao_mutua += prob_conjunta * np.log2(prob_conjunta / (prob_marginal_mpg * prob_marginal_variavel))
+        informacao_mutua += prob_conjunta * np.log2(prob_conjunta / (prob_mpg_final * prob_variavel_final))
     
     return informacao_mutua
 
 
-def estimar_MPG(data):
-    pass
+def estimar_mpg(data):
+
+    a = -5.5241
+    b = -0.146
+    c = -0.4909
+    d = -0.0026
+    e = -0.0045
+    f = 0.6725
+    g = -0.0059
+
+    
+    matriz_estimar = data.to_numpy()
+
+    media_acceleration = np.mean(data["Acceleration"])
+    media_weight = np.mean(data["Weight"])
+
+    predict1 = np.zeros_like(matriz_estimar[:, 6], dtype=float)  # Criar array para previsão 1
+    predict2 = np.zeros_like(matriz_estimar[:, 6], dtype=float)  # Criar array para previsão 2
+    predict3 = np.zeros_like(matriz_estimar[:, 6], dtype=float)  # Criar array para previsão 3
+    diff1 = np.zeros_like(matriz_estimar[:, 6], dtype=float)
+    diff2 = np.zeros_like(matriz_estimar[:, 6], dtype=float)
+    diff3 = np.zeros_like(matriz_estimar[:, 6], dtype=float)
+
+    #fazer um for e ir fazer por cada coluna
+    for i in range(np.shape(matriz_estimar)[0]):
+        predict1[i] = a + b * matriz_estimar[i, 0] + c * matriz_estimar[i, 1] + d * matriz_estimar[i, 2] + e * matriz_estimar[i, 3] + f * matriz_estimar[i, 4] + g * matriz_estimar[i, 5]
+        predict2[i] = a + b * media_acceleration + c * matriz_estimar[i, 1] + d * matriz_estimar[i, 2] + e * matriz_estimar[i, 3] + f * matriz_estimar[i, 4] + g * matriz_estimar[i, 5]
+        predict3[i] = a + b * matriz_estimar[i, 0] + c * matriz_estimar[i, 1] + d * matriz_estimar[i, 2] + e * matriz_estimar[i, 3] + f * matriz_estimar[i,4] + g * media_weight
+        diff1[i] = abs(matriz_estimar[i, 6] - predict1[i])
+        diff2[i] = abs(matriz_estimar[i, 6] - predict2[i])
+        diff3[i] = matriz_estimar[i, 6] - predict3[i]
+
+
+    print(np.mean(diff1))
+    rmse1 = np.sqrt(np.mean(diff1**2))
+    print(f"RMSE: {rmse1:.10f}")
+
+    print("Substituindo Acc pelo seu valor médio")
+    print(np.mean(diff2))
+    rmse2 = np.sqrt(np.mean(diff2**2))
+    print(f"RMSE: {rmse2:.10f}")
+
+    print("Substituindo Weight pelo seu valor médio")
+    print(np.mean(diff3))
+    rmse3 = np.sqrt(np.mean(diff3**2))
+    print(f"RMSE: {rmse3:.10f}")
+
 
 def main():
 
@@ -207,13 +251,15 @@ def main():
     plt.show()
 
     # Converter dados para uint16
-    data_uint16 = data.select_dtypes(include=[np.number]).astype(np.uint16)
-
-    # Número de bits do tipo de dado (para uint16)
-    num_bits = data_uint16.iloc[:, 0].dtype.itemsize * 8
+    nova_data = data
+    nova_data = nova_data.to_numpy()
+    nova_data = nova_data.astype(np.uint16)
+    n_bits = nova_data.itemsize * 8
+  
+    data_uint16 = data.astype(np.uint16)
 
     # Criar o alfabeto como um intervalo de uint16
-    alfabeto_geral = np.arange(0, 2**num_bits,  dtype=np.uint16)
+    alfabeto_geral = np.arange(0, 2**n_bits,  dtype=np.uint16)
 
     # Calcular e plotar as ocorrências
     ocorrencias_por_variavel = calcular_ocorrencias(data_uint16, alfabeto_geral)
@@ -228,22 +274,27 @@ def main():
     ocorrencias_binned = calcular_ocorrencias(data_uint16[colunas_binned], alfabeto_geral)
 
     # Calcular a média
+    print("\n---------------------\nCálculo médio de bits:\n--------------------")
     calculo_medio_bits(data_uint16)
-    print("\n")
+
     #Huffmaan
+    print("\n---------------------\nCodificação Huffmaan:\n--------------------")
     huffmaan(data_uint16)
 
     #Correlação de Pearson
+    print("\n---------------------\nCálculo da correlação de Pearson:\n--------------------")
     correlacao_pearson(data_uint16, varNames)
 
     #Informação Mútua
-
-    #Ponto 10
-    print("\n")
+    print("\n---------------------\nCálculo da informação mútua:\n--------------------")
     for i in range (len(varNames) - 1):
         valor = calcular_informacao_mutua(data_uint16, i)
         indice = varNames[i]
         print(f"Informação mútua entre MPG e {indice} : {valor}" )
+
+    #Estimar MPG
+    print("\n---------------------\nEstimar MPG:\n--------------------")
+    estimar_mpg(data_uint16)
 
 if __name__ == "__main__":
     main()
