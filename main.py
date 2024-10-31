@@ -25,8 +25,8 @@ def calcular_ocorrencias(data, alfabeto):
     # Adicione o retorno das ocorrências aqui
     return ocorrencias
 
-#Corrigir
 def contar_ocorrencias(data, alfabetoGeral):
+    #Inicializar o dicionário para armazenar as ocorrências
     ocorrencias_por_variavel = {}
     
     for coluna in data.columns:
@@ -36,6 +36,7 @@ def contar_ocorrencias(data, alfabetoGeral):
         # Contar a frequência de cada valor na coluna
         for valor in data[coluna]:
             if valor in contagem:
+                #se o valor existe incrementa em um a sua contagem
                 contagem[valor] += 1
         
         # Converte as contagens em uma lista para manter a compatibilidade com o alfabeto
@@ -45,18 +46,22 @@ def contar_ocorrencias(data, alfabetoGeral):
 
 def binning(data, coluna, alfabeto, num_simbolos, ocorrencias):
     # Dividir o alfabeto em intervalos de acordo com o número de símbolos
-    intervalos = np.array_split(alfabeto, len(alfabeto) // num_simbolos) 
+    intervalos = np.array_split(alfabeto, len(alfabeto) / num_simbolos) 
     
     # Criar cópia da coluna para modificar com os novos valores
     nova_coluna = data[coluna].copy()
-    
+
+    # Iterar sobre os valores da coluna original
     for idx, valor_original in enumerate(data[coluna]):
+        # Iterar sobre os intervalos
         for intervalo in intervalos:
             if valor_original in intervalo:  # Verificar se o valor está no intervalo
                 # Encontrar os índices dos valores presentes no intervalo
                 indices_frequentes = np.where(np.isin(alfabeto, intervalo))[0]
+                # Obter os valores do alfabeto presentes no intervalo
                 valores_frequentes = alfabeto[indices_frequentes]
-                frequencias = np.array([ocorrencias[i] for i in indices_frequentes])  # Acessar frequências usando índices
+                # Obter as frequências dos valores presentes no intervalo
+                frequencias = np.array([ocorrencias[i] for i in indices_frequentes])
 
                 # Verificar se há frequências maiores que 0
                 if np.any(frequencias > 0):
@@ -74,7 +79,7 @@ def binning(data, coluna, alfabeto, num_simbolos, ocorrencias):
 
 def calculo_medio_bits(data):
 
-    # Calcula a entropia para cada coluna individualmente
+    #Calcular a entropia para cada coluna
     for coluna in data.columns:
         # conta a frequência de cada valor na coluna e normaliza (divide pelo total de ocorrencias).values retona os vaslores como um array
         valores_norm = data[coluna].value_counts(normalize=True).sort_index().values
@@ -117,7 +122,7 @@ def huffmaan(data):
         # Calcular o valor médio de bits por símbolo
         L_media = np.average(lengths, weights=probabilidades)
         # Calcular a variância ponderada
-        variancia_ponderada = np.average((lengths - L_media)**2, weights=probabilidades)  #tem uma formula(ver)
+        variancia_ponderada = np.average((lengths - L_media)**2, weights=probabilidades)
         print(f"Média ponderada para {coluna}: {L_media:.10f} bits")
         print(f"Variância ponderada dos comprimentos: {variancia_ponderada:.10f}\n")
 
@@ -145,29 +150,32 @@ def correlacao_pearson(data, varNames):
 
 def calcular_informacao_mutua(data, indice):
     # Extrair a coluna "MPG" e a coluna da variável indicada pelo índice
-    mpg = data.iloc[:, -1].to_numpy()  # Última coluna para MPG
-    variavel = data.iloc[:, indice].to_numpy()
+    mpg = data.iloc[:, -1].to_numpy()  #coluna MPG para uma array numpy
+    variavel = data.iloc[:, indice].to_numpy() #coluna da variavel para uma array numpy
     
     total = len(mpg)  # Número total de pares
     
-    # Obter valores únicos e contagens para calcular as probabilidades marginais
+    # Obter valores únicos e contagens para calcular as probabilidades
     valores_mpg, contagem_mpg = np.unique(mpg, return_counts=True)
     valores_variavel, contagem_variavel = np.unique(variavel, return_counts=True)
     
+    # Calcular as probabilidades
     prob_mpg = contagem_mpg / total
     prob_variavel = contagem_variavel / total
     
     # Cria uma matriz de pares para calcular a distribuição conjunta
     pares = np.column_stack((mpg, variavel))
+    # Obter valores únicos e contagens para calcular a distribuição conjunta
     valores_pares, contagem_pares = np.unique(pares, axis=0, return_counts=True)
     
     # Calcular a informação mútua
     informacao_mutua = 0
+    # Iterar sobre os pares de valores
     for (val_mpg, val_var), contagem_conjunta in zip(valores_pares, contagem_pares):
         # Probabilidade conjunta do par
         prob_conjunta = contagem_conjunta / total
         
-        # Índices para as probabilidades marginais
+        # Índices para as probabilidades
         indice_mpg = np.where(valores_mpg == val_mpg)[0][0]
         indice_variavel = np.where(valores_variavel == val_var)[0][0]
         
@@ -182,6 +190,7 @@ def calcular_informacao_mutua(data, indice):
 
 def estimar_mpg(data):
 
+    # Coeficientes da regressão linear
     a = -5.5241
     b = -0.146
     c = -0.4909
@@ -190,40 +199,42 @@ def estimar_mpg(data):
     f = 0.6725
     g = -0.0059
 
-    
+    # Converter o DataFrame para um array numpy
     matriz_estimar = data.to_numpy()
 
+    # Calcular a média de Acceleration e Weight para usar na substituição
     media_acceleration = np.mean(data["Acceleration"])
     media_weight = np.mean(data["Weight"])
 
-    predict1 = np.zeros_like(matriz_estimar[:, 6], dtype=float)  # Criar array para previsão 1
-    predict2 = np.zeros_like(matriz_estimar[:, 6], dtype=float)  # Criar array para previsão 2
-    predict3 = np.zeros_like(matriz_estimar[:, 6], dtype=float)  # Criar array para previsão 3
+    # Inicializar arrays para armazenar as previsões e diferenças
+    predict1 = np.zeros_like(matriz_estimar[:, 6], dtype=float)  
+    predict2 = np.zeros_like(matriz_estimar[:, 6], dtype=float)  
+    predict3 = np.zeros_like(matriz_estimar[:, 6], dtype=float) 
     diff1 = np.zeros_like(matriz_estimar[:, 6], dtype=float)
     diff2 = np.zeros_like(matriz_estimar[:, 6], dtype=float)
     diff3 = np.zeros_like(matriz_estimar[:, 6], dtype=float)
 
-    #fazer um for e ir fazer por cada coluna
+    # Calcular as previsões e diferenças
     for i in range(np.shape(matriz_estimar)[0]):
         predict1[i] = a + b * matriz_estimar[i, 0] + c * matriz_estimar[i, 1] + d * matriz_estimar[i, 2] + e * matriz_estimar[i, 3] + f * matriz_estimar[i, 4] + g * matriz_estimar[i, 5]
         predict2[i] = a + b * media_acceleration + c * matriz_estimar[i, 1] + d * matriz_estimar[i, 2] + e * matriz_estimar[i, 3] + f * matriz_estimar[i, 4] + g * matriz_estimar[i, 5]
         predict3[i] = a + b * matriz_estimar[i, 0] + c * matriz_estimar[i, 1] + d * matriz_estimar[i, 2] + e * matriz_estimar[i, 3] + f * matriz_estimar[i,4] + g * media_weight
         diff1[i] = abs(matriz_estimar[i, 6] - predict1[i])
         diff2[i] = abs(matriz_estimar[i, 6] - predict2[i])
-        diff3[i] = matriz_estimar[i, 6] - predict3[i]
+        diff3[i] = abs(matriz_estimar[i, 6] - predict3[i])
 
 
-    print(np.mean(diff1))
+    print(f"MAE: {np.mean(diff1)}")
     rmse1 = np.sqrt(np.mean(diff1**2))
-    print(f"RMSE: {rmse1:.10f}")
+    print(f"RMSE: {rmse1:.10f}\n")
 
     print("Substituindo Acc pelo seu valor médio")
-    print(np.mean(diff2))
+    print(f"MAE: {np.mean(diff2)}")
     rmse2 = np.sqrt(np.mean(diff2**2))
-    print(f"RMSE: {rmse2:.10f}")
+    print(f"RMSE: {rmse2:.10f}\n")
 
     print("Substituindo Weight pelo seu valor médio")
-    print(np.mean(diff3))
+    print(f"MAE: {np.mean(diff3)}")
     rmse3 = np.sqrt(np.mean(diff3**2))
     print(f"RMSE: {rmse3:.10f}")
 
