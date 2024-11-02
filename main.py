@@ -200,42 +200,42 @@ def estimar_mpg(data):
     g = -0.0059
 
     # Converter o DataFrame para um array numpy
-    matriz_estimar = data.to_numpy()
+    matriz_dados = data.to_numpy()
 
     # Calcular a média de Acceleration e Weight para usar na substituição
     media_acceleration = np.mean(data["Acceleration"])
     media_weight = np.mean(data["Weight"])
 
     # Inicializar arrays para armazenar as previsões e diferenças
-    predict1 = np.zeros_like(matriz_estimar[:, 6], dtype=float)  
-    predict2 = np.zeros_like(matriz_estimar[:, 6], dtype=float)  
-    predict3 = np.zeros_like(matriz_estimar[:, 6], dtype=float) 
-    diff1 = np.zeros_like(matriz_estimar[:, 6], dtype=float)
-    diff2 = np.zeros_like(matriz_estimar[:, 6], dtype=float)
-    diff3 = np.zeros_like(matriz_estimar[:, 6], dtype=float)
+    previsao_completa = np.zeros_like(matriz_dados[:, 6], dtype=float)
+    previsao_media_acceleration = np.zeros_like(matriz_dados[:, 6], dtype=float)
+    previsao_media_weight = np.zeros_like(matriz_dados[:, 6], dtype=float)
+    diferenca_completa = np.zeros_like(matriz_dados[:, 6], dtype=float)
+    diferenca_media_acceleration = np.zeros_like(matriz_dados[:, 6], dtype=float)
+    diferenca_media_weight = np.zeros_like(matriz_dados[:, 6], dtype=float)
 
     # Calcular as previsões e diferenças
-    for i in range(np.shape(matriz_estimar)[0]):
-        predict1[i] = a + b * matriz_estimar[i, 0] + c * matriz_estimar[i, 1] + d * matriz_estimar[i, 2] + e * matriz_estimar[i, 3] + f * matriz_estimar[i, 4] + g * matriz_estimar[i, 5]
-        predict2[i] = a + b * media_acceleration + c * matriz_estimar[i, 1] + d * matriz_estimar[i, 2] + e * matriz_estimar[i, 3] + f * matriz_estimar[i, 4] + g * matriz_estimar[i, 5]
-        predict3[i] = a + b * matriz_estimar[i, 0] + c * matriz_estimar[i, 1] + d * matriz_estimar[i, 2] + e * matriz_estimar[i, 3] + f * matriz_estimar[i,4] + g * media_weight
-        diff1[i] = abs(matriz_estimar[i, 6] - predict1[i])
-        diff2[i] = abs(matriz_estimar[i, 6] - predict2[i])
-        diff3[i] = abs(matriz_estimar[i, 6] - predict3[i])
+    for i in range(np.shape(matriz_dados)[0]):
+        previsao_completa[i] = a + b * matriz_dados[i, 0] + c * matriz_dados[i, 1] + d * matriz_dados[i, 2] + e * matriz_dados[i, 3] + f * matriz_dados[i, 4] + g * matriz_dados[i, 5]
+        previsao_media_acceleration[i] = a + b * media_acceleration + c * matriz_dados[i, 1] + d * matriz_dados[i, 2] + e * matriz_dados[i, 3] + f * matriz_dados[i, 4] + g * matriz_dados[i, 5]
+        previsao_media_weight[i] = a + b * matriz_dados[i, 0] + c * matriz_dados[i, 1] + d * matriz_dados[i, 2] + e * matriz_dados[i, 3] + f * matriz_dados[i,4] + g * media_weight
+        diferenca_completa[i] = abs(matriz_dados[i, 6] - previsao_completa[i])
+        diferenca_media_acceleration[i] = abs(matriz_dados[i, 6] - previsao_media_acceleration[i])
+        diferenca_media_weight[i] = abs(matriz_dados[i, 6] - previsao_media_weight[i])
 
 
-    print(f"MAE: {np.mean(diff1)}")
-    rmse1 = np.sqrt(np.mean(diff1**2))
+    print(f"MAE: {np.mean(diferenca_completa)}")
+    rmse1 = np.sqrt(np.mean(diferenca_completa**2))
     print(f"RMSE: {rmse1:.10f}\n")
 
     print("Substituindo Acc pelo seu valor médio")
-    print(f"MAE: {np.mean(diff2)}")
-    rmse2 = np.sqrt(np.mean(diff2**2))
+    print(f"MAE: {np.mean(diferenca_media_acceleration)}")
+    rmse2 = np.sqrt(np.mean(diferenca_media_acceleration**2))
     print(f"RMSE: {rmse2:.10f}\n")
 
     print("Substituindo Weight pelo seu valor médio")
-    print(f"MAE: {np.mean(diff3)}")
-    rmse3 = np.sqrt(np.mean(diff3**2))
+    print(f"MAE: {np.mean(diferenca_media_weight)}")
+    rmse3 = np.sqrt(np.mean(diferenca_media_weight**2))
     print(f"RMSE: {rmse3:.10f}")
 
 
